@@ -787,7 +787,7 @@ void CMapHandler::CMapBlitter::drawFrame(SDL_Surface * targetSurf) const
 
 void CMapHandler::CMapBlitter::drawHeroFlag(SDL_Surface * targetSurf, SDL_Surface * sourceSurf, SDL_Rect * sourceRect, SDL_Rect * destRect, bool moving) const
 {
-	drawElement(EMapCacheType::HERO_FLAGS, sourceSurf, sourceRect, targetSurf, destRect, true);
+	drawElement(EMapCacheType::HERO_FLAGS, sourceSurf, sourceRect, targetSurf, destRect, false);
 }
 
 void CMapHandler::CMapBlitter::drawObject(SDL_Surface * targetSurf, SDL_Surface * sourceSurf, SDL_Rect * sourceRect, bool moving) const
@@ -1540,6 +1540,8 @@ SDL_Surface * CMapHandler::CMapCache::requestWorldViewCacheOrCreate(CMapHandler:
 		return cached;
 
 	auto scaled = CSDL_Ext::scaleSurfaceFast(fullSurface, fullSurface->w * scale, fullSurface->h * scale);
+	if (scaled->format && scaled->format->palette) // fix color keying, because SDL loses it at this point
+		CSDL_Ext::setColorKey(scaled, scaled->format->palette->colors[0]);
 	return cacheWorldViewEntry(type, key, scaled);
 }
 

@@ -543,10 +543,10 @@ void CGPreGame::update()
 		GH.drawFPSCounter();
 }
 
-void CGPreGame::runLocked(std::function<void(IUpdateable * )> cb)
+void CGPreGame::runLocked(std::function<void()> cb)
 {
 	boost::unique_lock<boost::recursive_mutex> lock(*CPlayerInterface::pim);
-	cb(this);	
+	cb();	
 }
 
 void CGPreGame::openCampaignScreen(std::string name)
@@ -974,11 +974,16 @@ void CSelectionScreen::handleConnection()
 				upcomingPacks.push_back(pack);
 			}
 		}
-	} HANDLE_EXCEPTION
+	}
 	catch(int i)
 	{
 		if(i != 666)
 			throw;
+	}
+	catch(...)
+	{
+		handleException();
+		throw;
 	}
 }
 
