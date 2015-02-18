@@ -5,6 +5,7 @@
 
 #include "CIntObject.h"
 #include "CCursorHandler.h"
+#include "CAnimation.h"
 
 #include "../CGameInfo.h"
 #include "../../lib/CThreadHelper.h"
@@ -66,7 +67,19 @@ void CGuiHandler::processLists(const ui16 activityFlag, std::function<void (std:
 	
 	#ifndef VCMI_SDL1
 	processList(CIntObject::TEXTINPUT,activityFlag,&textInterested,cb);
-	#endif // VCMI_SDL1
+#endif // VCMI_SDL1
+}
+
+void CGuiHandler::fadeNewScreen()
+{
+	// TODO don't start fade if fading is disabled in settings
+	
+	if (!screenFadeSurface)
+	{
+		assert(screen);
+		screenFadeSurface = CSDL_Ext::newSurface(screen->w, screen->h);
+	}
+	screenFadeAnim->init(CFadeAnimation::EMode::IN, screenFadeSurface);
 }
 
 void CGuiHandler::handleElementActivate(CIntObject * elem, ui16 activityFlag)
@@ -106,13 +119,16 @@ void CGuiHandler::popIntTotally( IShowActivatable *top )
 	fakeMouseMove();
 }
 
-void CGuiHandler::pushInt( IShowActivatable *newInt )
+void CGuiHandler::pushInt(IShowActivatable *newInt, bool fadein /* = false */)
 {
 	assert(newInt);
 	assert(boost::range::find(listInt, newInt) == listInt.end()); // do not add same object twice
 
 	//a new interface will be present, we'll need to use buffer surface (unless it's advmapint that will alter screenBuf on activate anyway)
 	screenBuf = screen2;
+	
+	if (fadein)
+		fadeNewScreen();
 
 	if(!listInt.empty())
 		listInt.front()->deactivate();
@@ -152,9 +168,21 @@ IShowActivatable * CGuiHandler::topInt()
 }
 
 void CGuiHandler::totalRedraw()
-{
-	for(auto & elem : objsToBlit)
-		elem->showAll(screen2);
+{	
+	if (screenFadeAnim->isFading())
+	{
+		for(auto & elem : objsToBlit)
+			if (elem != objsToBlit.back())
+				elem->showAll(screen2);
+		
+		objsToBlit.back()->showAll(screenFadeSurface);
+		screenFadeAnim->draw(screen2, nullptr, nullptr);
+	}
+	else
+	{
+		for(auto & elem : objsToBlit)
+			elem->showAll(screen2);
+	}
 	blitAt(screen2,0,0,screen);
 }
 
@@ -372,6 +400,11 @@ void CGuiHandler::handleMouseMotion(SDL_Event *sEvent)
 
 void CGuiHandler::simpleRedraw()
 {
+	if (screenFadeAnim->isFading())
+	{
+		totalRedraw();
+		return;
+	}
 	//update only top interface and draw background
 	if(objsToBlit.size() > 1)
 		blitAt(screen2,0,0,screen); //blit background
@@ -415,6 +448,8 @@ void CGuiHandler::renderFrame()
 	{
 		if(nullptr != curInt)
 		{
+			if (screenFadeAnim->isFading())
+				screenFadeAnim->update();
 			curInt -> update();
 		}			
 		// draw the mouse cursor and update the screen
@@ -439,7 +474,9 @@ void CGuiHandler::renderFrame()
 
 
 CGuiHandler::CGuiHandler()
-:lastClick(-500, -500)
+	: screenFadeAnim(new CFadeAnimationCustom()), 
+	  screenFadeSurface(nullptr),
+	  lastClick(-500, -500)
 {
 	curInt = nullptr;
 	current = nullptr;
@@ -453,6 +490,7 @@ CGuiHandler::CGuiHandler()
 CGuiHandler::~CGuiHandler()
 {
 	delete mainFPSmng;
+	delete screenFadeAnim;
 }
 
 void CGuiHandler::breakEventHandling()

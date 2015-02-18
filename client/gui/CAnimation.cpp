@@ -1259,6 +1259,11 @@ bool CFadeAnimation::isFinished() const
 	return fadingCounter >= 1.0f;
 }
 
+bool CFadeAnimation::canDraw() const
+{
+	return fading && fadingSurface && fadingMode != EMode::NONE;
+}
+
 CFadeAnimation::CFadeAnimation()
 	: fadingSurface(nullptr),
 	  fading(false),
@@ -1300,7 +1305,7 @@ void CFadeAnimation::init(EMode mode, SDL_Surface * sourceSurface, bool freeSurf
 
 void CFadeAnimation::draw(SDL_Surface * targetSurface, const SDL_Rect * sourceRect, SDL_Rect * destRect)
 {	
-	if (!fading || !fadingSurface || fadingMode == EMode::NONE)
+	if (!canDraw())
 	{
 		fading = false;
 		return;
@@ -1310,3 +1315,16 @@ void CFadeAnimation::draw(SDL_Surface * targetSurface, const SDL_Rect * sourceRe
 	SDL_BlitSurface(fadingSurface, sourceRect, targetSurface, destRect);
 	SDL_SetSurfaceAlphaMod(fadingSurface, 255);
 }
+
+//void CFadeAnimationCustom::draw(std::function<void ()> drawCallback)
+//{
+//	if (!canDraw())
+//	{
+//		fading = false;
+//		return;
+//	}
+	
+//	SDL_SetSurfaceAlphaMod(fadingSurface, fadingCounter * 255);
+//	drawCallback();
+//	SDL_SetSurfaceAlphaMod(fadingSurface, 255);
+//}

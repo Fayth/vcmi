@@ -228,7 +228,7 @@ public:
 	{
 		NONE, IN, OUT
 	};
-private:
+protected:
 	static constexpr float DEFAULT_DELTA = 0.05f;
 	float delta;
 	SDL_Surface * fadingSurface;
@@ -238,13 +238,20 @@ private:
 	
 	float initialCounter() const;
 	bool isFinished() const;
+	virtual bool canDraw() const;
 public:
 	EMode fadingMode;
 
 	CFadeAnimation();
-	~CFadeAnimation();
+	virtual ~CFadeAnimation();
 	void init(EMode mode, SDL_Surface * sourceSurface, bool freeSurfaceAtEnd = false, float animDelta = DEFAULT_DELTA);
 	void update();
 	void draw(SDL_Surface * targetSurface, const SDL_Rect * sourceRect, SDL_Rect * destRect);
 	bool isFading() const { return fading; }
+};
+
+class CFadeAnimationCustom : public CFadeAnimation
+{
+public:
+//	void draw(std::function<void()> drawCallback);
 };

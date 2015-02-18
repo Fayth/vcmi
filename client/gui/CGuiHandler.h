@@ -11,6 +11,7 @@ class IUpdateable;
 class ILockedUpdatable;
 class IShowActivatable;
 class IShowable;
+class CFadeAnimationCustom;
 
 /*
  * CGuiHandler.h, part of VCMI engine
@@ -62,8 +63,12 @@ private:
 	#ifndef VCMI_SDL1
 	CIntObjectList textInterested;
 	#endif // VCMI_SDL1
-	               
+		               
 	void processLists(const ui16 activityFlag, std::function<void (std::list<CIntObject*> *)> cb);               
+	
+	CFadeAnimationCustom *screenFadeAnim;
+	SDL_Surface *screenFadeSurface;
+	void fadeNewScreen();
 public:
 	void handleElementActivate(CIntObject * elem, ui16 activityFlag);
 	void handleElementDeActivate(CIntObject * elem, ui16 activityFlag);
@@ -88,7 +93,7 @@ public:
 
 	void popInt(IShowActivatable *top); //removes given interface from the top and activates next
 	void popIntTotally(IShowActivatable *top); //deactivates, deletes, removes given interface from the top and activates next
-	void pushInt(IShowActivatable *newInt); //deactivate old top interface, activates this one and pushes to the top
+	void pushInt(IShowActivatable *newInt, bool fadein = false); //deactivate old top interface, activates this one and pushes to the top
 	void popInts(int howMany); //pops one or more interfaces - deactivates top, deletes and removes given number of interfaces, activates new front
 	IShowActivatable *topInt(); //returns top interface
 
