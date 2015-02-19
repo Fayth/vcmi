@@ -247,12 +247,6 @@ public:
 	virtual ~CFadeAnimation();
 	void init(EMode mode, SDL_Surface * sourceSurface, bool freeSurfaceAtEnd = false, float animDelta = DEFAULT_DELTA);
 	void update();
-	void draw(SDL_Surface * targetSurface, const SDL_Rect * sourceRect, SDL_Rect * destRect);
+	void draw(SDL_Surface * targetSurface, SDL_Rect * sourceRect, SDL_Rect * destRect);
 	bool isFading() const { return fading; }
-};
-
-class CFadeAnimationCustom : public CFadeAnimation
-{
-public:
-//	void draw(std::function<void()> drawCallback);
 };

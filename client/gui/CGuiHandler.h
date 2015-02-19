@@ -11,7 +11,7 @@ class IUpdateable;
 class ILockedUpdatable;
 class IShowActivatable;
 class IShowable;
-class CFadeAnimationCustom;
+class CFadeAnimation;
 
 /*
  * CGuiHandler.h, part of VCMI engine
@@ -66,9 +66,17 @@ private:
 		               
 	void processLists(const ui16 activityFlag, std::function<void (std::list<CIntObject*> *)> cb);               
 	
-	CFadeAnimationCustom *screenFadeAnim;
+	CFadeAnimation *screenFadeAnim;
 	SDL_Surface *screenFadeSurface;
-	void fadeNewScreen();
+	bool fadeFinishedInCurrentFrame;
+	bool crossfadePush;
+	/// list of windows that were pushed with fade-in; kept here to fade-out them on close if possible
+	std::vector<const IShowActivatable*> currentFadableWindows;
+	void fadeInNewScreen(IShowActivatable * newScreen);
+	void fadeOutRemovedScreen(IShowActivatable * removedScreen);
+	bool canFadeout(const IShowActivatable * removedScreen) const;
+	void updateFade();
+//	void redrawWithFading(bool totalRedraw);
 public:
 	void handleElementActivate(CIntObject * elem, ui16 activityFlag);
 	void handleElementDeActivate(CIntObject * elem, ui16 activityFlag);
@@ -93,6 +101,7 @@ public:
 
 	void popInt(IShowActivatable *top); //removes given interface from the top and activates next
 	void popIntTotally(IShowActivatable *top); //deactivates, deletes, removes given interface from the top and activates next
+	void popIntTotallyAndWaitForFadingPush(IShowActivatable *newInt);
 	void pushInt(IShowActivatable *newInt, bool fadein = false); //deactivate old top interface, activates this one and pushes to the top
 	void popInts(int howMany); //pops one or more interfaces - deactivates top, deletes and removes given number of interfaces, activates new front
 	IShowActivatable *topInt(); //returns top interface

@@ -1303,7 +1303,7 @@ void CFadeAnimation::init(EMode mode, SDL_Surface * sourceSurface, bool freeSurf
 	shouldFreeSurface = freeSurfaceAtEnd;
 }
 
-void CFadeAnimation::draw(SDL_Surface * targetSurface, const SDL_Rect * sourceRect, SDL_Rect * destRect)
+void CFadeAnimation::draw(SDL_Surface * targetSurface, SDL_Rect * sourceRect, SDL_Rect * destRect)
 {	
 	if (!canDraw())
 	{
@@ -1312,19 +1312,6 @@ void CFadeAnimation::draw(SDL_Surface * targetSurface, const SDL_Rect * sourceRe
 	}
 	
 	CSDL_Ext::setAlpha(fadingSurface, fadingCounter * 255);
-	SDL_BlitSurface(fadingSurface, const_cast<SDL_Rect *>(sourceRect), targetSurface, destRect); //FIXME
+	SDL_BlitSurface(fadingSurface, sourceRect, targetSurface, destRect); //FIXME
 	CSDL_Ext::setAlpha(fadingSurface, 255);
 }
-
-//void CFadeAnimationCustom::draw(std::function<void ()> drawCallback)
-//{
-//	if (!canDraw())
-//	{
-//		fading = false;
-//		return;
-//	}
-	
-//	SDL_SetSurfaceAlphaMod(fadingSurface, fadingCounter * 255);
-//	drawCallback();
-//	SDL_SetSurfaceAlphaMod(fadingSurface, 255);
-//}

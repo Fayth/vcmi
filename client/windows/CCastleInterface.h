@@ -208,6 +208,7 @@ class CCastleInterface : public CWindowObject, public CWindowWithGarrison
 
 	std::vector<CCreaInfo*> creainfo;//small icons of creatures (bottom-left corner);
 
+	void cleanupOnClose();
 public:
 	CTownList * townlist;
 

@@ -735,7 +735,7 @@ void CClient::battleStarted(const BattleInfo * info)
 			Rect((screen->w - 800)/2, 
 			     (screen->h - 600)/2, 800, 600), att, def);
 
-		GH.pushInt(bi);
+		GH.pushInt(bi, true);
 	}
 
 	auto callBattleStart = [&](PlayerColor color, ui8 side){

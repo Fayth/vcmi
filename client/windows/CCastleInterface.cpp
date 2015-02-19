@@ -917,7 +917,7 @@ CCastleInterface::~CCastleInterface()
 	delete bicons;
 }
 
-void CCastleInterface::close()
+void CCastleInterface::cleanupOnClose()
 {
 	if(town->tempOwner == LOCPLINT->playerID) //we may have opened window for an allied town
 	{
@@ -926,6 +926,11 @@ void CCastleInterface::close()
 		else
 			adventureInt->select(town);
 	}
+}
+
+void CCastleInterface::close()
+{
+	cleanupOnClose();
 	CWindowObject::close();
 }
 
@@ -942,8 +947,9 @@ void CCastleInterface::townChange()
 	const CGTownInstance * town = this->town;// "this" is going to be deleted
 	if ( dest == town )
 		return;
-	close();
-	GH.pushInt(new CCastleInterface(dest, town));
+	cleanupOnClose();
+	GH.popIntTotallyAndWaitForFadingPush(this);
+	GH.pushInt(new CCastleInterface(dest, town), true);
 }
 
 void CCastleInterface::addBuilding(BuildingID bid)

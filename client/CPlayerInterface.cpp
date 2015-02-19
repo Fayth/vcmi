@@ -433,10 +433,14 @@ void CPlayerInterface::heroCreated(const CGHeroInstance * hero)
 }
 void CPlayerInterface::openTownWindow(const CGTownInstance * town)
 {
+	bool castleIntWasOpened = false;
 	if (castleInt)
+	{
+		castleIntWasOpened = true;
 		castleInt->close();
+	}
 	castleInt = new CCastleInterface(town);
-	GH.pushInt(castleInt, true);
+	GH.pushInt(castleInt, !castleIntWasOpened);
 }
 
 int3 CPlayerInterface::repairScreenPos(int3 pos)
