@@ -82,7 +82,7 @@ void CGuiHandler::fadeInNewScreen(IShowActivatable * newScreen)
 		assert(screen);
 		screenFadeSurface = CSDL_Ext::newSurface(screen->w, screen->h);
 	}
-	SDL_FillRect(screenFadeSurface, nullptr, SDL_MapRGBA(screenFadeSurface->format, 0, 0, 0, 0));
+	SDL_FillRect(screenFadeSurface, nullptr, SDL_MapRGBA(screenFadeSurface->format, 0, 0, 0, 0)); // TODO cheaper way to clear the bitmap?
 	newScreen->showAll(screenFadeSurface);
 	screenFadeAnim->init(CFadeAnimation::EMode::IN, screenFadeSurface, false, 0.1f);
 }
@@ -154,18 +154,23 @@ void CGuiHandler::popIntTotally( IShowActivatable *top )
 
 void CGuiHandler::popIntTotallyAndWaitForFadingPush(IShowActivatable * top)
 {
+	/// this is special version of popIntTotally that can be used for crossfading views; 
+	/// if you use it, you are expected to call fading pushInt immediately (within the same frame);
+	///	it's done separately in two steps (this pop + next push) because some windows (CCastleInterface) rely on ctor/dtor magic 
+	/// and have to be constructed/destructed in the correct order; during crossfade, the window passed to this method is still drawn below the new pushed window
 	assert(listInt.front() == top);
 	SDL_FillRect(screenFadeSurface, nullptr, SDL_MapRGBA(screenFadeSurface->format, 0, 0, 0, 0));
 	top->showAll(screenFadeSurface);	
+	// these lines are a copy of popIntTotally and popInt logic, but with no redraw and no fading
 	top->deactivate();
-	listInt.pop_front();
+	listInt.pop_front(); 
 	objsToBlit -= top;
 	if(!listInt.empty())
 		listInt.front()->activate();	
 	delete top;
 	fakeMouseMove();
 	
-	crossfadePush = true;
+	crossfadePush = true; // indicates that now gui handler expects fading push and uses some special, hacky logic
 }
 
 void CGuiHandler::pushInt(IShowActivatable *newInt, bool fadein /* = false */)
@@ -178,6 +183,8 @@ void CGuiHandler::pushInt(IShowActivatable *newInt, bool fadein /* = false */)
 	
 	if (crossfadePush)
 	{
+		// for crossfading (@see #popIntTotallyAndWaitForFadingPush), we have previous window cached in fading surface, so copy it to screen buffer
+		// (total redraws are disabled during crossfade, so it won't be overridden)
 		blitAt(screenFadeSurface, 0, 0, screen2);
 	}
 	
@@ -203,7 +210,7 @@ void CGuiHandler::popInts( int howMany )
 		auto front = listInt.front();
 		objsToBlit -= front;
 		listInt.pop_front();
-		if (i + 1 == howMany && canFadeout(front))
+		if (i + 1 == howMany && canFadeout(front)) // tries to fade-out only the last screen (TODO fade-out all of them? should be possible since they can be all cached on single surface)
 			fadeOutRemovedScreen(front);
 		delete front;		
 	}
